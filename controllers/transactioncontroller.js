@@ -14,10 +14,14 @@ const addtransaction = async (req, res, next) => {
         res.status(400).send(error.message);
     }
 }
-
+const testing=async(req,res,next)=>{
+    res.send("it is working");
+}
 
 
 
 
 module.exports = {
-    addtransaction}   
+    addtransaction,
+    testing
+}   
