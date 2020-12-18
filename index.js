@@ -14,5 +14,5 @@ app.use(bodyParser.json());
 app.use('/', transactionroutes.routes);
 
 
-port=process.env.PORT || 5000
-app.listen(port, () => console.log('App is listening on url http://localhost:' + config.port));
+
+app.listen(config.port, () => console.log('App is listening on url http://localhost:' + config.port));
