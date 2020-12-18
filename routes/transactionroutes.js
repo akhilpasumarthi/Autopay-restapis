@@ -5,7 +5,7 @@ const {
 
 const router = express.Router();
 
-router.post('/transaction', addtransaction);
+router.post('/transaction/:id', addtransaction);
 router.get('/',testing)
 
 
