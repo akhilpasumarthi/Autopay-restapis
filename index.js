@@ -2,7 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const config = require('./config');
+const PORT = process.env.PORT || 5000
 const transactionroutes = require('./routes/transactionroutes');
 
 const app = express();
@@ -15,4 +15,4 @@ app.use('/', transactionroutes.routes);
 
 
 
-app.listen(config.port, () => console.log('App is listening on url http://localhost:' + config.port));
+app.listen(PORT, () => console.log('App is listening on url http://localhost:' + PORT));
