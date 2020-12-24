@@ -13,6 +13,5 @@ app.use(bodyParser.json());
 
 app.use('/', transactionroutes.routes);
 
-
-
-app.listen(PORT, () => console.log('App is listening on url http://localhost:' + PORT));
+const server=app.listen(PORT, () => console.log('App is listening on url http://localhost:' + PORT));
+server.timeout = 60000;
