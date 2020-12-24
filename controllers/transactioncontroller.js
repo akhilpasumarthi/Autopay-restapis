@@ -164,13 +164,13 @@ const addtransaction = async (req, res, next) => {
             userstatus=document.status;
             if(userstatus=="paid"){
               res.status(200).send("success")
-              clearTimeout(timer);
+             
              }  
         });
          
-       timer= setTimeout(()=>{
+        setTimeout(()=>{
           res.status(200).send("unsuccess")
-        },60000)
+        },50000)
                         
                          console.log("over amount") 
                  }
