@@ -1,9 +1,10 @@
 'use strict';
 
 const firebase = require('../db');
+const functions = require('firebase-functions')
 var admin = require("firebase-admin");
 var Tx = require('ethereumjs-tx').Transaction;
-
+var timer;
 var serviceAccount = require("../serviceAccountKey.json"); 
 console.log(serviceAccount);
 const firestore = firebase.firestore();
@@ -29,8 +30,7 @@ const addtransaction = async (req, res, next) => {
         //var myTimestamp = firebase.firestore.Timestamp.fromDate(new Date())
         var dt = dateTime.create();
         var dt1=new Date();
-        var formatted = dt.format('Y-m-d H:M:S');
-        console.log(dt.format);
+     
         const account1='0x610b6fa884c62183Cb0060122F13B4195C240E79'
         const account2='0x62697b036fb68B61e15746eCf8950A823a1849F4'
         const privatekey=Buffer.from('fb10119c1c39e5e25fc2818fdf699a4d49b0504ba1e3c884a6deb0a62f0e9e20','hex') 
@@ -55,7 +55,7 @@ const addtransaction = async (req, res, next) => {
                      console.log("from metamask account",web3.utils.fromWei(bal,'wei'))
                      if(bal<amount){
                        console.log("no enough balance ");
-                       res.status(200).send("no enough balance")
+                       res.status(200).send("unsuccess")
                      }else{
                        try  {
                          var value=amount.toString();
@@ -79,8 +79,9 @@ const addtransaction = async (req, res, next) => {
                                if(err==null)
                                {  
                                  data.status="paid";
+                                 
                                  console.log(docdata.userid)
-                                await firestore.collection('users').doc(document.id).collection('transactions').doc().set(data);
+                                await firestore.collection('users').doc(document.id).collection('transactions').doc().set(data)
                                 await firestore.collection('merchants').doc('r5uYd9Q0yjII1AstWBsm').collection('transactions').doc().set({
                                   from: docdata.name,
                                   time: dt1.valueOf(),
@@ -88,7 +89,7 @@ const addtransaction = async (req, res, next) => {
                                   transactionhash: txhash
 
                               });
-                                 //console.log(document.id);
+                                 
                                  
          
                                  var payload = {
@@ -105,7 +106,7 @@ const addtransaction = async (req, res, next) => {
                                  await admin.messaging().sendToDevice(token, payload, options)
                              .then(function(response) {
                              console.log("Successfully sent message:", response);
-                            // res.send('Transaction successfuly');
+                             res.send('success');
 
                            })
                          .catch(function(error) {
@@ -127,8 +128,9 @@ const addtransaction = async (req, res, next) => {
                  }
                  else{
 
-                  await firestore.collection('users').doc(document.id).collection('transactions').doc().set(data);
-                  console.log(document.id);
+               var  storeddoc=  await firestore.collection('users').doc(document.id).collection('transactions').add(data);
+                var docid=storeddoc.id
+               
                   
 
                   var payload = {
@@ -152,8 +154,24 @@ const addtransaction = async (req, res, next) => {
             console.log("Error sending message:", error);
             
           });
-          res.status(200).send('Sent Transaction request successfully')
-                          
+          var userstatus="unpaid"
+          
+
+          await firestore.collection('users').doc(document.id).collection('transactions').doc(docid).onSnapshot(function(doc) {
+                  
+            console.log( " data: ", doc.data());
+            var document=doc.data()
+            userstatus=document.status;
+            if(userstatus=="paid"){
+              res.status(200).send("success")
+              clearTimeout(timer);
+             }  
+        });
+         
+       timer= setTimeout(()=>{
+          res.status(200).send("unsuccess")
+        },60000)
+                        
                          console.log("over amount") 
                  }
 
@@ -161,9 +179,9 @@ const addtransaction = async (req, res, next) => {
         }) 
         
         
-        res.status(200).send('Record saved successfuly');
+       // res.status(200).send("success");
     } catch (error) {
-        res.status(400).send(error.message);
+        res.status(200).send("unsuccess");
     }
 }
 const testing=async(req,res,next)=>{

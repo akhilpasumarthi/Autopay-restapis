@@ -1,6 +1,6 @@
 const express = require('express');
 const {
-       addtransaction, testing 
+       addtransaction, testing,
       } = require('../controllers/transactioncontroller');
 
 const router = express.Router();
