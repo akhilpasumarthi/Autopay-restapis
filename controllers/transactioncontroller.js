@@ -170,7 +170,7 @@ const addtransaction = async (req, res, next) => {
          
         setTimeout(()=>{
           res.status(200).send("unsuccess")
-        },50000)
+        },29000)
                         
                          console.log("over amount") 
                  }
