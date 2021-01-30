@@ -4,7 +4,7 @@ const firebase = require('../db');
 const functions = require('firebase-functions')
 var admin = require("firebase-admin");
 var Tx = require('ethereumjs-tx').Transaction;
-var timer;
+
 var serviceAccount = require("../serviceAccountKey.json"); 
 console.log(serviceAccount);
 const firestore = firebase.firestore();
@@ -27,6 +27,7 @@ const addtransaction = async (req, res, next) => {
         const merchantdata=req.body;
         const amount=data.amount;
         const name=data.from;
+        console.log(amount)
         //var myTimestamp = firebase.firestore.Timestamp.fromDate(new Date())
         var dt = dateTime.create();
         var dt1=new Date();
@@ -38,19 +39,23 @@ const addtransaction = async (req, res, next) => {
         data.timestamp=dt1.valueOf();
         
           
-        //let docid="";
+       
         await firestore.collection('users').where("rfid","==",id).get().then( async function(querySnapshot) {
             let docid;
             querySnapshot.forEach( async function (document) {
-                // doc.data() is never undefined for query doc snapshots
-               // docdata=doc.data();
+                
                 console.log(document.id, " => ", document.data());
                 console.log(docid);
                 var docdata=document.data();
                 var token=docdata.token;
+                var status=docdata.paymentstatus
                 console.log(token)
-                //console.log(docdata['token'])
+                console.log(amount)
+                if(status=="off"){
+                  res.send("User disabled the rfid")
+                }else{
                 if(amount<500){
+                  console.log("working in automatic mode")
                   await  web3.eth.getBalance(account1,(err,bal)=>{
                      console.log("from metamask account",web3.utils.fromWei(bal,'wei'))
                      if(bal<amount){
@@ -111,7 +116,7 @@ const addtransaction = async (req, res, next) => {
                            })
                          .catch(function(error) {
                            console.log("Error sending message:", error);
-                           res.status(200).send("no enough balance")
+                           res.status(200).send("Transaction Unsuccess")
                          });
                                   
                                }
@@ -126,55 +131,56 @@ const addtransaction = async (req, res, next) => {
                  
                    })
                  }
-                 else{
-
-               var  storeddoc=  await firestore.collection('users').doc(document.id).collection('transactions').add(data);
-                var docid=storeddoc.id
+              else {
+                console.log("working in notify mode")
+                   var  storeddoc=  await firestore.collection('users').doc(document.id).collection('transactions').add(data);
+                   var docid=storeddoc.id
                
                   
 
-                  var payload = {
+                    var payload = {
                     notification: {
                       title: name,
                       body: "Requesting amount of "+amount
-                    }
-                  };
-                  var options = {
+                      }
+                      };
+                   
+                      var options = {
                     priority: "high",
                     timeToLive: 60 * 60 *24
-                  };
+                      };
                   
                   await admin.messaging().sendToDevice(token, payload, options)
-              .then(function(response) {
-              console.log("Successfully sent message:", response);
-             // res.send('Transaction successfuly');
-
-            })
-          .catch(function(error) {
-            console.log("Error sending message:", error);
+                    .then(function(response) {
+                    console.log("Successfully sent message:", response);
+             
+                   })
+               .catch(function(error) {
+                console.log("Error sending message:", error);
             
-          });
-          var userstatus="unpaid"
+                 });
+
+               var userstatus="unpaid"
           
 
-          await firestore.collection('users').doc(document.id).collection('transactions').doc(docid).onSnapshot(function(doc) {
+               await firestore.collection('users').doc(document.id).collection('transactions').doc(docid).onSnapshot(function(doc) {
                   
-            console.log( " data: ", doc.data());
-            var document=doc.data()
-            userstatus=document.status;
-            if(userstatus=="paid"){
-              res.status(200).send("success")
+               console.log( " data: ", doc.data());
+               var document=doc.data()
+               userstatus=document.status;
+               if(userstatus=="paid"){
+                 res.status(200).send("success")
              
-             }  
-        });
+               }  
+                });
          
-        setTimeout(()=>{
-          res.status(200).send("unsuccess")
-        },29000)
+                      setTimeout(()=>{
+                        res.status(200).send("unsuccess")
+                        },29000)
                         
-                         console.log("over amount") 
+                          console.log("over amount") 
                  }
-
+                }      
             });
         }) 
         
@@ -189,10 +195,24 @@ const testing=async(req,res,next)=>{
   
 }
 
+const gettransaction=async(req,res,next)=>{
+  const id = req.params.id;
+
+  await firestore.collection('users').doc(id).collection('transactions').where("status","==","unpaid").get().then( async function(querySnapshot) {
+    querySnapshot.forEach( async function (document) {
+                
+      console.log(document.id, " => ", document.data());
+      const docdata=document.data()
+      res.send(docdata.from+" requesting an amount of "+ docdata.amount+" say confirm to make the payment ")
+    })
+  })
+  
+}
 
 
 
 module.exports = {
     addtransaction,
-    testing
+    testing,
+    gettransaction
 }   
