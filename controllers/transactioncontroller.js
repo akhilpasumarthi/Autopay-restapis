@@ -200,19 +200,123 @@ const gettransaction=async(req,res,next)=>{
 
   await firestore.collection('users').doc(id).collection('transactions').where("status","==","unpaid").get().then( async function(querySnapshot) {
     querySnapshot.forEach( async function (document) {
-                
+     
       console.log(document.id, " => ", document.data());
       const docdata=document.data()
+      const user = await firestore.collection('users').doc(id).get();
+      console.log(user.data())    
       res.send(docdata.from+" requesting an amount of "+ docdata.amount+" say confirm to make the payment ")
+    })
+  })
+  
+}
+const maketransaction=async(req,res,next)=>{
+  
+  const id = req.params.id;
+  const account1='0x610b6fa884c62183Cb0060122F13B4195C240E79'
+  const account2='0x62697b036fb68B61e15746eCf8950A823a1849F4'
+  const privatekey=Buffer.from('fb10119c1c39e5e25fc2818fdf699a4d49b0504ba1e3c884a6deb0a62f0e9e20','hex') 
+  var dt1=new Date();
+  
+
+  await firestore.collection('users').doc(id).collection('transactions').where("status","==","unpaid").get().then( async function(querySnapshot) {
+    querySnapshot.forEach( async function (document) {
+       
+      const user = await firestore.collection('users').doc(id).get();
+      console.log(user)
+      const userdata=user.data()
+      const token= userdata.token  
+      const name=userdata.name        
+      console.log(document.id, " => ", document.data());
+      const docdata=document.data()
+      //const name=docdata.from
+      const docid= document.id
+      const amount=docdata.amount;
+      await  web3.eth.getBalance(account1,(err,bal)=>{
+        console.log("from metamask account",web3.utils.fromWei(bal,'wei'))
+        if(bal<amount){
+          console.log("no enough balance ");
+          res.status(200).send("unsuccess")
+        }else{
+          try  {
+            var value=amount.toString();
+
+            const transaction= web3.eth.getTransactionCount(account1,async(err,txcount)=> {
+              const txobject={
+                  nonce: web3.utils.toHex(txcount),
+                  to: account2,
+                  value: web3.utils.toHex(web3.utils.toWei(value,'gwei')),
+                  gasLimit: web3.utils.toHex(21000),
+                  gasPrice: web3.utils.toHex(web3.utils.toWei('10','gwei'))
+              }
+              const tx=new Tx(txobject,{chain:'ropsten', hardfork: 'petersburg'})
+              tx.sign(privatekey)
+              const serializedTransaction=tx.serialize()
+              const raw='0x'+serializedTransaction.toString('hex')
+              await  web3.eth.sendSignedTransaction(raw,async(err,txhash)=>{
+                  console.log(err)
+                  console.log('txhassh',txhash)
+                  
+                  if(err==null)
+                  {  
+                    
+                    
+                    
+                   await firestore.collection('users').doc(id).collection('transactions').doc(docid).update({status: "paid",
+                  transactionhash: txhash})
+                   await firestore.collection('merchants').doc('r5uYd9Q0yjII1AstWBsm').collection('transactions').doc().set({
+                     from: name,
+                     time: dt1.valueOf(),
+                     amount: amount,
+                     transactionhash: txhash
+
+                 });
+                    
+                    
+
+                    var payload = {
+                      notification: {
+                        title: amount+"is paid to"+name,
+                        body: ""
+                      }
+                    };
+                    var options = {
+                      priority: "high",
+                      timeToLive: 60 * 60 *24
+                    };
+                    
+                    await admin.messaging().sendToDevice(token, payload, options)
+                .then(function(response) {
+                console.log("Successfully sent message:", response);
+                res.send('Transaction successful');
+
+              })
+            .catch(function(error) {
+              console.log("Error sending message:", error);
+              res.status(200).send("Transaction Unsuccess")
+            });
+                     
+                  }
+              })
+          })
+          }catch{
+
+          }
+          
+        }
+
+    
+      })
+
     })
   })
   
 }
 
 
-
 module.exports = {
     addtransaction,
     testing,
-    gettransaction
+    gettransaction,
+    maketransaction
 }   
