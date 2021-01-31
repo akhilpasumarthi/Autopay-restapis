@@ -26,7 +26,7 @@ const addtransaction = async (req, res, next) => {
         const data = req.body;
         const merchantdata=req.body;
         const amount=data.amount;
-        const name=data.from;
+        const name=data.to;
         console.log(amount)
         //var myTimestamp = firebase.firestore.Timestamp.fromDate(new Date())
         var dt = dateTime.create();
