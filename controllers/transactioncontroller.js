@@ -32,9 +32,9 @@ const addtransaction = async (req, res, next) => {
         var dt = dateTime.create();
         var dt1=new Date();
      
-        const account1='0x610b6fa884c62183Cb0060122F13B4195C240E79'
+        const account1='0x1adad368f62d64bb4a6f7af8327ba03dfd7d319a'
         const account2='0x62697b036fb68B61e15746eCf8950A823a1849F4'
-        const privatekey=Buffer.from('fb10119c1c39e5e25fc2818fdf699a4d49b0504ba1e3c884a6deb0a62f0e9e20','hex') 
+        const privatekey=Buffer.from('556ac69c822e339bc6443d5b58cfe45aadfe1b197293a16c30be59134895b879','hex')
         
         data.timestamp=dt1.valueOf();
         
@@ -212,10 +212,9 @@ const gettransaction=async(req,res,next)=>{
 }
 const maketransaction=async(req,res,next)=>{
   
-  const id = req.params.id;
-  const account1='0x610b6fa884c62183Cb0060122F13B4195C240E79'
+  const account1='0x1adad368f62d64bb4a6f7af8327ba03dfd7d319a'
   const account2='0x62697b036fb68B61e15746eCf8950A823a1849F4'
-  const privatekey=Buffer.from('fb10119c1c39e5e25fc2818fdf699a4d49b0504ba1e3c884a6deb0a62f0e9e20','hex') 
+  const privatekey=Buffer.from('556ac69c822e339bc6443d5b58cfe45aadfe1b197293a16c30be59134895b879','hex')
   var dt1=new Date();
   
 
@@ -245,7 +244,7 @@ const maketransaction=async(req,res,next)=>{
               const txobject={
                   nonce: web3.utils.toHex(txcount),
                   to: account2,
-                  value: web3.utils.toHex(web3.utils.toWei(value,'gwei')),
+                  value: web3.utils.toHex(web3.utils.toWei(value,'szabo')),
                   gasLimit: web3.utils.toHex(21000),
                   gasPrice: web3.utils.toHex(web3.utils.toWei('10','gwei'))
               }
