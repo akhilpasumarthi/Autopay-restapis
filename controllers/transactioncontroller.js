@@ -32,9 +32,7 @@ const addtransaction = async (req, res, next) => {
         var dt = dateTime.create();
         var dt1=new Date();
      
-        const account1='0x1adad368f62d64bb4a6f7af8327ba03dfd7d319a'
-        const account2='0x62697b036fb68B61e15746eCf8950A823a1849F4'
-        const privatekey=Buffer.from('556ac69c822e339bc6443d5b58cfe45aadfe1b197293a16c30be59134895b879','hex')
+     
         
         data.timestamp=dt1.valueOf();
         
@@ -44,11 +42,15 @@ const addtransaction = async (req, res, next) => {
             let docid;
             querySnapshot.forEach( async function (document) {
                 
+              
                 console.log(document.id, " => ", document.data());
                 console.log(docid);
                 var docdata=document.data();
                 var token=docdata.token;
                 var status=docdata.paymentstatus
+              const account1=docdata.walletaddress
+              const account2='0x62697b036fb68B61e15746eCf8950A823a1849F4'
+              const privatekey=Buffer.from(docdata.privatekey,'hex')
                 console.log(token)
                 console.log(amount)
                 if(status=="off"){
@@ -57,7 +59,7 @@ const addtransaction = async (req, res, next) => {
                 if(amount<500){
                   console.log("working in automatic mode")
                   await  web3.eth.getBalance(account1,(err,bal)=>{
-                     console.log("from metamask account",web3.utils.fromWei(bal,'wei'))
+                     console.log("from user account",web3.utils.fromWei(bal,'wei'))
                      if(bal<amount){
                        console.log("no enough balance ");
                        res.status(200).send("unsuccess")
@@ -212,12 +214,10 @@ const gettransaction=async(req,res,next)=>{
 }
 const maketransaction=async(req,res,next)=>{
   
-  const account1='0x1adad368f62d64bb4a6f7af8327ba03dfd7d319a'
-  const account2='0x62697b036fb68B61e15746eCf8950A823a1849F4'
-  const privatekey=Buffer.from('556ac69c822e339bc6443d5b58cfe45aadfe1b197293a16c30be59134895b879','hex')
+  const id = req.params.id;
   var dt1=new Date();
   
-
+ 
   await firestore.collection('users').doc(id).collection('transactions').where("status","==","unpaid").get().then( async function(querySnapshot) {
     querySnapshot.forEach( async function (document) {
        
@@ -228,6 +228,9 @@ const maketransaction=async(req,res,next)=>{
       const name=userdata.name        
       console.log(document.id, " => ", document.data());
       const docdata=document.data()
+      const account1=userdata.walletaddress
+      const account2='0x62697b036fb68B61e15746eCf8950A823a1849F4'
+      const privatekey=Buffer.from(userdata.privatekey,'hex')
       //const name=docdata.from
       const docid= document.id
       const amount=docdata.amount;
@@ -312,10 +315,37 @@ const maketransaction=async(req,res,next)=>{
   
 }
 
+const getuser=async(req,res,next)=>{
+  const id = req.params.id;
+  var data=0;
+  await firestore.collection('users').where("rfid","==",id).get().then( async function(querySnapshot) {
+    
+    querySnapshot.forEach( async function (document) {
+     
+      console.log(document.id, " => ", document.data());
+      const docdata=document.data()
+      data=1;
+      var status= docdata.paymentstatus
+      if(status="off") {
+         res.send("user disabled rfid")
+      }
+      else{
+      res.send(docdata.name)
+      }
+    
+     // res.send('user not found')
+    
+    })
+  })
+  if(data==0){
+    res.send("No user found")
+  }
+}
 
 module.exports = {
     addtransaction,
     testing,
     gettransaction,
-    maketransaction
+    maketransaction,
+    getuser
 }   
