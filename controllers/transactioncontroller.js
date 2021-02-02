@@ -69,7 +69,7 @@ const addtransaction = async (req, res, next) => {
                            const txobject={
                                nonce: web3.utils.toHex(txcount),
                                to: account2,
-                               value: web3.utils.toHex(web3.utils.toWei(value,'gwei')),
+                               value: web3.utils.toHex(web3.utils.toWei(value,'szabo')),
                                gasLimit: web3.utils.toHex(21000),
                                gasPrice: web3.utils.toHex(web3.utils.toWei('10','gwei'))
                            }
