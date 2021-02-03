@@ -326,7 +326,8 @@ const getuser=async(req,res,next)=>{
       const docdata=document.data()
       data=1;
       var status= docdata.paymentstatus
-      if(status="off") {
+      
+      if(status=="off") {
          res.send("user disabled rfid")
       }
       else{
