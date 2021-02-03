@@ -207,7 +207,7 @@ const gettransaction=async(req,res,next)=>{
       const docdata=document.data()
       const user = await firestore.collection('users').doc(id).get();
       console.log(user.data())    
-      res.send(docdata.from+" requesting an amount of "+ docdata.amount+" say confirm to make the payment ")
+      res.send(docdata.to+" requesting an amount of "+ docdata.amount+" say confirm to make the payment ")
     })
   })
   
